@@ -5,6 +5,8 @@ data_ingestion:
   source_URL: https://drive.google.com/file/d/1z0mreUtRmR-P-magILsDR3T7M6IkGXtY/view?usp=sharing
   local_data_file: artifacts/data_ingestion/data.zip
   unzip_dir: artifacts/data_ingestion
+  training_data_path: artifacts/data_ingestion/Chest-CT-Scan-data
+
 
 
 prepare_base_model:
@@ -16,3 +18,4 @@ prepare_base_model:
 model_training:
   root_dir: artifacts/model_training
   trained_model_path: artifacts/model_training/model.h5
+  

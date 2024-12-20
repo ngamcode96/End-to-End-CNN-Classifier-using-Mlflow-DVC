@@ -1,14 +1,16 @@
 from cnnClassifier.constants import *
 from cnnClassifier.utils.common import read_yaml, create_directories
-from cnnClassifier.entity.config_entity import DataIngestionConfig, PrepareBaseModelConfig, TrainingConfig
+from cnnClassifier.entity.config_entity import DataIngestionConfig, PrepareBaseModelConfig, TrainingConfig, EvaluationConfig
 import os
 
 
 class ConfigurationManager:
-    def __init__(self, config_path = CONFIG_FILE_PATH, params_path = PARAMS_FILE_PATH):
+    def __init__(self, config_path = CONFIG_FILE_PATH, params_path = PARAMS_FILE_PATH, secret_path = SECRET_FILE_PATH):
 
         self.config = read_yaml(config_path)
         self.params = read_yaml(params_path)
+        self.secret = read_yaml(secret_path)
+        
 
         create_directories([self.config.artifacts_root])
     
@@ -47,7 +49,6 @@ class ConfigurationManager:
     
     
     # get the training config and params
-    
     def get_trainer_config(self) -> TrainingConfig:
         training = self.config.model_training
         prepare_base_model = self.config.prepare_base_model
@@ -70,5 +71,26 @@ class ConfigurationManager:
         )
 
         return trainer_config
+    
+    #Evaluation config
+    def get_evaluation_config(self) -> EvaluationConfig:
+        model_training_config = self.config.model_training
+        data_ingestion_config = self.config.data_ingestion
+        mlflow_credentials = self.secret.mlflow_tracking_credentials
+        
+        os.environ['MLFLOW_TRACKING_URI'] = mlflow_credentials.MLFLOW_TRACKING_URI
+        os.environ['MLFLOW_TRACKING_USERNAME'] = mlflow_credentials.MLFLOW_TRACKING_USERNAME
+        os.environ['MLFLOW_TRACKING_PASSWORD'] = mlflow_credentials.MLFLOW_TRACKING_PASSWORD
+                
+        evaluation_config = EvaluationConfig(
+            path_of_the_model=Path(model_training_config.trained_model_path),
+            training_data=Path(data_ingestion_config.training_data_path),
+            all_params=self.params,
+            mlflow_uri=mlflow_credentials.MLFLOW_TRACKING_URI,
+            params_image_size=self.params.IMAGE_SIZE,
+            params_batch_size=self.params.BATCH_SIZE
+        )
+        
+        return evaluation_config
 
 
